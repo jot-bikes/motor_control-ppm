@@ -1,0 +1,622 @@
+ARM GAS  /tmp/ccVm9iOP.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"main.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.parseInt,"ax",%progbits
+  18              		.align	1
+  19              		.global	parseInt
+  20              		.arch armv7e-m
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  24              		.fpu fpv4-sp-d16
+  26              	parseInt:
+  27              	.LVL0:
+  28              	.LFB135:
+  29              		.file 1 "Src/main.c"
+   1:Src/main.c    **** 
+   2:Src/main.c    **** /* Includes ------------------------------------------------------------------*/
+   3:Src/main.c    **** #include "main.h"
+   4:Src/main.c    **** #include "usb_device.h"
+   5:Src/main.c    **** #include "usbd_cdc_if.h"
+   6:Src/main.c    **** 
+   7:Src/main.c    **** #include <string.h>
+   8:Src/main.c    **** #include <ctype.h>
+   9:Src/main.c    **** #include <stdbool.h>
+  10:Src/main.c    **** 
+  11:Src/main.c    **** typedef enum torque_sensor_signals
+  12:Src/main.c    **** {
+  13:Src/main.c    ****   SINE,
+  14:Src/main.c    ****   COSINE,
+  15:Src/main.c    ****   TORQUE
+  16:Src/main.c    **** } ts_signal;
+  17:Src/main.c    **** 
+  18:Src/main.c    **** //Global Variables
+  19:Src/main.c    **** uint16_t adc_val[3]; //Torque Sensor Values
+  20:Src/main.c    **** uint8_t tx_buffer[50];
+  21:Src/main.c    **** volatile uint16_t ppm = 0;
+  22:Src/main.c    **** 
+  23:Src/main.c    **** int parseInt(char *str, int len);
+  24:Src/main.c    **** void setPPM(uint16_t *pulseLength);
+  25:Src/main.c    **** 
+  26:Src/main.c    **** int main(void)
+  27:Src/main.c    **** {
+  28:Src/main.c    ****   // Peripheral Initialization
+  29:Src/main.c    ****   system_peripheral_init();
+ARM GAS  /tmp/ccVm9iOP.s 			page 2
+
+
+  30:Src/main.c    ****   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_val, 3);
+  31:Src/main.c    **** 
+  32:Src/main.c    ****   setPPM(1000);
+  33:Src/main.c    **** 
+  34:Src/main.c    ****   while (1)
+  35:Src/main.c    ****   {
+  36:Src/main.c    ****     HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_15);
+  37:Src/main.c    ****     HAL_Delay(100);
+  38:Src/main.c    ****   }
+  39:Src/main.c    **** }
+  40:Src/main.c    **** 
+  41:Src/main.c    **** void CDC_ReceiveCallBack(uint8_t *buf, uint32_t len)
+  42:Src/main.c    **** {
+  43:Src/main.c    ****   char tx_buffer[50];
+  44:Src/main.c    ****   char rx_buffer[50];
+  45:Src/main.c    ****   strncpy(rx_buffer, buf, len);
+  46:Src/main.c    ****   rx_buffer[len] = '\0';
+  47:Src/main.c    ****   ppm = parseInt(rx_buffer, strlen(rx_buffer));
+  48:Src/main.c    ****   setPPM(&ppm);
+  49:Src/main.c    ****   sprintf(tx_buffer, "Setting PPM : %dms\r\n", ppm, 50);
+  50:Src/main.c    ****   // sprintf(tx_buffer, "Received Buffer Size: %d\n Buffer : %s", len, rx_buffer, 50);
+  51:Src/main.c    ****   // sprintf(tx_buffer, "Received : %s\n", rx_buffer, 50);
+  52:Src/main.c    **** 
+  53:Src/main.c    ****   CDC_Transmit_FS(tx_buffer, strlen(tx_buffer));
+  54:Src/main.c    **** }
+  55:Src/main.c    **** 
+  56:Src/main.c    **** int parseInt(char *str, int len)
+  57:Src/main.c    **** {
+  30              		.loc 1 57 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  35              		.loc 1 57 1 is_stmt 0 view .LVU1
+  36 0000 F0B4     		push	{r4, r5, r6, r7}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 16
+  39              		.cfi_offset 4, -16
+  40              		.cfi_offset 5, -12
+  41              		.cfi_offset 6, -8
+  42              		.cfi_offset 7, -4
+  43 0002 0746     		mov	r7, r0
+  58:Src/main.c    ****   int parsed = 0;
+  44              		.loc 1 58 3 is_stmt 1 view .LVU2
+  45              	.LVL1:
+  59:Src/main.c    ****   char ch;
+  46              		.loc 1 59 3 view .LVU3
+  60:Src/main.c    ****   bool negative = false, parsing = false;
+  47              		.loc 1 60 3 view .LVU4
+  61:Src/main.c    **** 
+  62:Src/main.c    ****   for (int i = 0; i < len; i++)
+  48              		.loc 1 62 3 view .LVU5
+  49              	.LBB2:
+  50              		.loc 1 62 8 view .LVU6
+  51              		.loc 1 62 12 is_stmt 0 view .LVU7
+  52 0004 0023     		movs	r3, #0
+  53              	.LBE2:
+ARM GAS  /tmp/ccVm9iOP.s 			page 3
+
+
+  60:Src/main.c    ****   bool negative = false, parsing = false;
+  54              		.loc 1 60 26 view .LVU8
+  55 0006 1D46     		mov	r5, r3
+  60:Src/main.c    ****   bool negative = false, parsing = false;
+  56              		.loc 1 60 8 view .LVU9
+  57 0008 9C46     		mov	ip, r3
+  58:Src/main.c    ****   char ch;
+  58              		.loc 1 58 7 view .LVU10
+  59 000a 1846     		mov	r0, r3
+  60              	.LVL2:
+  61              	.LBB3:
+  62              		.loc 1 62 3 view .LVU11
+  63 000c 06E0     		b	.L2
+  64              	.LVL3:
+  65              	.L4:
+  63:Src/main.c    ****   {
+  64:Src/main.c    ****     ch = str[i];
+  65:Src/main.c    ****     if (isdigit(ch) != 0)
+  66:Src/main.c    ****     {
+  67:Src/main.c    ****       if (!parsing && i != 0 && str[i - 1] == '-')
+  68:Src/main.c    ****         negative = true;
+  69:Src/main.c    ****       parsing = true;
+  66              		.loc 1 69 7 is_stmt 1 view .LVU12
+  70:Src/main.c    ****       parsed = (parsed * 10) + (ch - '0');
+  67              		.loc 1 70 7 view .LVU13
+  68              		.loc 1 70 24 is_stmt 0 view .LVU14
+  69 000e 00EB8004 		add	r4, r0, r0, lsl #2
+  70 0012 6500     		lsls	r5, r4, #1
+  71              		.loc 1 70 36 view .LVU15
+  72 0014 303A     		subs	r2, r2, #48
+  73              	.LVL4:
+  74              		.loc 1 70 14 view .LVU16
+  75 0016 A818     		adds	r0, r5, r2
+  76              	.LVL5:
+  69:Src/main.c    ****       parsed = (parsed * 10) + (ch - '0');
+  77              		.loc 1 69 15 view .LVU17
+  78 0018 0125     		movs	r5, #1
+  79              	.LVL6:
+  80              	.L5:
+  62:Src/main.c    ****   {
+  81              		.loc 1 62 29 discriminator 2 view .LVU18
+  82 001a 0133     		adds	r3, r3, #1
+  83              	.LVL7:
+  84              	.L2:
+  62:Src/main.c    ****   {
+  85              		.loc 1 62 3 discriminator 1 view .LVU19
+  86 001c 8B42     		cmp	r3, r1
+  87 001e 14DA     		bge	.L6
+  64:Src/main.c    ****     if (isdigit(ch) != 0)
+  88              		.loc 1 64 5 is_stmt 1 view .LVU20
+  64:Src/main.c    ****     if (isdigit(ch) != 0)
+  89              		.loc 1 64 13 is_stmt 0 view .LVU21
+  90 0020 1E46     		mov	r6, r3
+  64:Src/main.c    ****     if (isdigit(ch) != 0)
+  91              		.loc 1 64 8 view .LVU22
+  92 0022 FA5C     		ldrb	r2, [r7, r3]	@ zero_extendqisi2
+  93              	.LVL8:
+ARM GAS  /tmp/ccVm9iOP.s 			page 4
+
+
+  65:Src/main.c    ****     {
+  94              		.loc 1 65 5 is_stmt 1 view .LVU23
+  65:Src/main.c    ****     {
+  95              		.loc 1 65 9 is_stmt 0 view .LVU24
+  96 0024 0C4C     		ldr	r4, .L11
+  97 0026 145D     		ldrb	r4, [r2, r4]	@ zero_extendqisi2
+  65:Src/main.c    ****     {
+  98              		.loc 1 65 8 view .LVU25
+  99 0028 14F0040F 		tst	r4, #4
+ 100 002c 0BD0     		beq	.L3
+  67:Src/main.c    ****         negative = true;
+ 101              		.loc 1 67 7 is_stmt 1 view .LVU26
+  67:Src/main.c    ****         negative = true;
+ 102              		.loc 1 67 10 is_stmt 0 view .LVU27
+ 103 002e 002D     		cmp	r5, #0
+ 104 0030 EDD1     		bne	.L4
+  67:Src/main.c    ****         negative = true;
+ 105              		.loc 1 67 20 discriminator 1 view .LVU28
+ 106 0032 002B     		cmp	r3, #0
+ 107 0034 EBD0     		beq	.L4
+  67:Src/main.c    ****         negative = true;
+ 108              		.loc 1 67 36 discriminator 2 view .LVU29
+ 109 0036 3E44     		add	r6, r6, r7
+ 110 0038 16F8014C 		ldrb	r4, [r6, #-1]	@ zero_extendqisi2
+  67:Src/main.c    ****         negative = true;
+ 111              		.loc 1 67 30 discriminator 2 view .LVU30
+ 112 003c 2D2C     		cmp	r4, #45
+ 113 003e E6D1     		bne	.L4
+  68:Src/main.c    ****       parsing = true;
+ 114              		.loc 1 68 18 view .LVU31
+ 115 0040 4FF0010C 		mov	ip, #1
+ 116              	.LVL9:
+  68:Src/main.c    ****       parsing = true;
+ 117              		.loc 1 68 18 view .LVU32
+ 118 0044 E3E7     		b	.L4
+ 119              	.LVL10:
+ 120              	.L3:
+  71:Src/main.c    ****     }
+  72:Src/main.c    ****     else if (parsing)
+ 121              		.loc 1 72 10 is_stmt 1 view .LVU33
+ 122              		.loc 1 72 13 is_stmt 0 view .LVU34
+ 123 0046 002D     		cmp	r5, #0
+ 124 0048 E7D0     		beq	.L5
+ 125              	.LVL11:
+ 126              	.L6:
+ 127              		.loc 1 72 13 view .LVU35
+ 128              	.LBE3:
+  73:Src/main.c    ****       break;
+  74:Src/main.c    ****   }
+  75:Src/main.c    ****   return ((negative) ? -parsed : parsed);
+ 129              		.loc 1 75 3 is_stmt 1 view .LVU36
+ 130              		.loc 1 75 32 is_stmt 0 view .LVU37
+ 131 004a BCF1000F 		cmp	ip, #0
+ 132 004e 00D0     		beq	.L1
+ 133              		.loc 1 75 32 discriminator 1 view .LVU38
+ 134 0050 4042     		rsbs	r0, r0, #0
+ 135              	.LVL12:
+ARM GAS  /tmp/ccVm9iOP.s 			page 5
+
+
+ 136              	.L1:
+  76:Src/main.c    **** }
+ 137              		.loc 1 76 1 view .LVU39
+ 138 0052 F0BC     		pop	{r4, r5, r6, r7}
+ 139              	.LCFI1:
+ 140              		.cfi_restore 7
+ 141              		.cfi_restore 6
+ 142              		.cfi_restore 5
+ 143              		.cfi_restore 4
+ 144              		.cfi_def_cfa_offset 0
+ 145              	.LVL13:
+ 146              		.loc 1 76 1 view .LVU40
+ 147 0054 7047     		bx	lr
+ 148              	.L12:
+ 149 0056 00BF     		.align	2
+ 150              	.L11:
+ 151 0058 01000000 		.word	_ctype_+1
+ 152              		.cfi_endproc
+ 153              	.LFE135:
+ 155              		.section	.text.setPPM,"ax",%progbits
+ 156              		.align	1
+ 157              		.global	setPPM
+ 158              		.syntax unified
+ 159              		.thumb
+ 160              		.thumb_func
+ 161              		.fpu fpv4-sp-d16
+ 163              	setPPM:
+ 164              	.LVL14:
+ 165              	.LFB136:
+  77:Src/main.c    **** 
+  78:Src/main.c    **** void setPPM(uint16_t *pulseLength)
+  79:Src/main.c    **** {
+ 166              		.loc 1 79 1 is_stmt 1 view -0
+ 167              		.cfi_startproc
+ 168              		@ args = 0, pretend = 0, frame = 0
+ 169              		@ frame_needed = 0, uses_anonymous_args = 0
+ 170              		@ link register save eliminated.
+  80:Src/main.c    ****   if (*pulseLength < 1000)
+ 171              		.loc 1 80 3 view .LVU42
+ 172              		.loc 1 80 7 is_stmt 0 view .LVU43
+ 173 0000 0388     		ldrh	r3, [r0]
+ 174              		.loc 1 80 6 view .LVU44
+ 175 0002 B3F57A7F 		cmp	r3, #1000
+ 176 0006 07D2     		bcs	.L14
+  81:Src/main.c    ****     *pulseLength = 1000;
+ 177              		.loc 1 81 5 is_stmt 1 view .LVU45
+ 178              		.loc 1 81 18 is_stmt 0 view .LVU46
+ 179 0008 4FF47A73 		mov	r3, #1000
+ 180 000c 0380     		strh	r3, [r0]	@ movhi
+ 181              	.L15:
+  82:Src/main.c    ****   else if (*pulseLength > 2000)
+  83:Src/main.c    ****     *pulseLength = 2000;
+  84:Src/main.c    ****   htim1.Instance->CCR1 = *pulseLength;
+ 182              		.loc 1 84 3 is_stmt 1 view .LVU47
+ 183              		.loc 1 84 8 is_stmt 0 view .LVU48
+ 184 000e 064B     		ldr	r3, .L16
+ 185 0010 1B68     		ldr	r3, [r3]
+ARM GAS  /tmp/ccVm9iOP.s 			page 6
+
+
+ 186              		.loc 1 84 26 view .LVU49
+ 187 0012 0288     		ldrh	r2, [r0]
+ 188              		.loc 1 84 24 view .LVU50
+ 189 0014 5A63     		str	r2, [r3, #52]
+  85:Src/main.c    **** }
+ 190              		.loc 1 85 1 view .LVU51
+ 191 0016 7047     		bx	lr
+ 192              	.L14:
+  82:Src/main.c    ****   else if (*pulseLength > 2000)
+ 193              		.loc 1 82 8 is_stmt 1 view .LVU52
+  82:Src/main.c    ****   else if (*pulseLength > 2000)
+ 194              		.loc 1 82 11 is_stmt 0 view .LVU53
+ 195 0018 B3F5FA6F 		cmp	r3, #2000
+ 196 001c F7D9     		bls	.L15
+  83:Src/main.c    ****   htim1.Instance->CCR1 = *pulseLength;
+ 197              		.loc 1 83 5 is_stmt 1 view .LVU54
+  83:Src/main.c    ****   htim1.Instance->CCR1 = *pulseLength;
+ 198              		.loc 1 83 18 is_stmt 0 view .LVU55
+ 199 001e 4FF4FA63 		mov	r3, #2000
+ 200 0022 0380     		strh	r3, [r0]	@ movhi
+ 201 0024 F3E7     		b	.L15
+ 202              	.L17:
+ 203 0026 00BF     		.align	2
+ 204              	.L16:
+ 205 0028 00000000 		.word	htim1
+ 206              		.cfi_endproc
+ 207              	.LFE136:
+ 209              		.section	.text.main,"ax",%progbits
+ 210              		.align	1
+ 211              		.global	main
+ 212              		.syntax unified
+ 213              		.thumb
+ 214              		.thumb_func
+ 215              		.fpu fpv4-sp-d16
+ 217              	main:
+ 218              	.LFB133:
+  27:Src/main.c    ****   // Peripheral Initialization
+ 219              		.loc 1 27 1 is_stmt 1 view -0
+ 220              		.cfi_startproc
+ 221              		@ Volatile: function does not return.
+ 222              		@ args = 0, pretend = 0, frame = 0
+ 223              		@ frame_needed = 0, uses_anonymous_args = 0
+ 224 0000 08B5     		push	{r3, lr}
+ 225              	.LCFI2:
+ 226              		.cfi_def_cfa_offset 8
+ 227              		.cfi_offset 3, -8
+ 228              		.cfi_offset 14, -4
+  29:Src/main.c    ****   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_val, 3);
+ 229              		.loc 1 29 3 view .LVU57
+ 230 0002 FFF7FEFF 		bl	system_peripheral_init
+ 231              	.LVL15:
+  30:Src/main.c    **** 
+ 232              		.loc 1 30 3 view .LVU58
+ 233 0006 0322     		movs	r2, #3
+ 234 0008 0849     		ldr	r1, .L21
+ 235 000a 0948     		ldr	r0, .L21+4
+ 236 000c FFF7FEFF 		bl	HAL_ADC_Start_DMA
+ARM GAS  /tmp/ccVm9iOP.s 			page 7
+
+
+ 237              	.LVL16:
+  32:Src/main.c    **** 
+ 238              		.loc 1 32 3 view .LVU59
+ 239 0010 4FF47A70 		mov	r0, #1000
+ 240 0014 FFF7FEFF 		bl	setPPM
+ 241              	.LVL17:
+ 242              	.L19:
+  34:Src/main.c    ****   {
+ 243              		.loc 1 34 3 discriminator 1 view .LVU60
+  36:Src/main.c    ****     HAL_Delay(100);
+ 244              		.loc 1 36 5 discriminator 1 view .LVU61
+ 245 0018 4FF40041 		mov	r1, #32768
+ 246 001c 0548     		ldr	r0, .L21+8
+ 247 001e FFF7FEFF 		bl	HAL_GPIO_TogglePin
+ 248              	.LVL18:
+  37:Src/main.c    ****   }
+ 249              		.loc 1 37 5 discriminator 1 view .LVU62
+ 250 0022 6420     		movs	r0, #100
+ 251 0024 FFF7FEFF 		bl	HAL_Delay
+ 252              	.LVL19:
+ 253 0028 F6E7     		b	.L19
+ 254              	.L22:
+ 255 002a 00BF     		.align	2
+ 256              	.L21:
+ 257 002c 00000000 		.word	adc_val
+ 258 0030 00000000 		.word	hadc1
+ 259 0034 000C0240 		.word	1073875968
+ 260              		.cfi_endproc
+ 261              	.LFE133:
+ 263              		.section	.text.CDC_ReceiveCallBack,"ax",%progbits
+ 264              		.align	1
+ 265              		.weak	CDC_ReceiveCallBack
+ 266              		.syntax unified
+ 267              		.thumb
+ 268              		.thumb_func
+ 269              		.fpu fpv4-sp-d16
+ 271              	CDC_ReceiveCallBack:
+ 272              	.LVL20:
+ 273              	.LFB134:
+  42:Src/main.c    ****   char tx_buffer[50];
+ 274              		.loc 1 42 1 view -0
+ 275              		.cfi_startproc
+ 276              		@ args = 0, pretend = 0, frame = 104
+ 277              		@ frame_needed = 0, uses_anonymous_args = 0
+  42:Src/main.c    ****   char tx_buffer[50];
+ 278              		.loc 1 42 1 is_stmt 0 view .LVU64
+ 279 0000 10B5     		push	{r4, lr}
+ 280              	.LCFI3:
+ 281              		.cfi_def_cfa_offset 8
+ 282              		.cfi_offset 4, -8
+ 283              		.cfi_offset 14, -4
+ 284 0002 9AB0     		sub	sp, sp, #104
+ 285              	.LCFI4:
+ 286              		.cfi_def_cfa_offset 112
+ 287 0004 0C46     		mov	r4, r1
+  43:Src/main.c    ****   char rx_buffer[50];
+ 288              		.loc 1 43 3 is_stmt 1 view .LVU65
+ARM GAS  /tmp/ccVm9iOP.s 			page 8
+
+
+  44:Src/main.c    ****   strncpy(rx_buffer, buf, len);
+ 289              		.loc 1 44 3 view .LVU66
+  45:Src/main.c    ****   rx_buffer[len] = '\0';
+ 290              		.loc 1 45 3 view .LVU67
+ 291 0006 0A46     		mov	r2, r1
+ 292 0008 0146     		mov	r1, r0
+ 293              	.LVL21:
+  45:Src/main.c    ****   rx_buffer[len] = '\0';
+ 294              		.loc 1 45 3 is_stmt 0 view .LVU68
+ 295 000a 6846     		mov	r0, sp
+ 296              	.LVL22:
+  45:Src/main.c    ****   rx_buffer[len] = '\0';
+ 297              		.loc 1 45 3 view .LVU69
+ 298 000c FFF7FEFF 		bl	strncpy
+ 299              	.LVL23:
+  46:Src/main.c    ****   ppm = parseInt(rx_buffer, strlen(rx_buffer));
+ 300              		.loc 1 46 3 is_stmt 1 view .LVU70
+  46:Src/main.c    ****   ppm = parseInt(rx_buffer, strlen(rx_buffer));
+ 301              		.loc 1 46 18 is_stmt 0 view .LVU71
+ 302 0010 1AAB     		add	r3, sp, #104
+ 303 0012 1C44     		add	r4, r4, r3
+ 304              	.LVL24:
+  46:Src/main.c    ****   ppm = parseInt(rx_buffer, strlen(rx_buffer));
+ 305              		.loc 1 46 18 view .LVU72
+ 306 0014 0023     		movs	r3, #0
+ 307 0016 04F8683C 		strb	r3, [r4, #-104]
+  47:Src/main.c    ****   setPPM(&ppm);
+ 308              		.loc 1 47 3 is_stmt 1 view .LVU73
+  47:Src/main.c    ****   setPPM(&ppm);
+ 309              		.loc 1 47 29 is_stmt 0 view .LVU74
+ 310 001a 6846     		mov	r0, sp
+ 311 001c FFF7FEFF 		bl	strlen
+ 312              	.LVL25:
+  47:Src/main.c    ****   setPPM(&ppm);
+ 313              		.loc 1 47 9 view .LVU75
+ 314 0020 0146     		mov	r1, r0
+ 315 0022 6846     		mov	r0, sp
+ 316 0024 FFF7FEFF 		bl	parseInt
+ 317              	.LVL26:
+  47:Src/main.c    ****   setPPM(&ppm);
+ 318              		.loc 1 47 7 view .LVU76
+ 319 0028 80B2     		uxth	r0, r0
+ 320 002a 0A4C     		ldr	r4, .L25
+ 321 002c 2080     		strh	r0, [r4]	@ movhi
+  48:Src/main.c    ****   sprintf(tx_buffer, "Setting PPM : %dms\r\n", ppm, 50);
+ 322              		.loc 1 48 3 is_stmt 1 view .LVU77
+ 323 002e 2046     		mov	r0, r4
+ 324 0030 FFF7FEFF 		bl	setPPM
+ 325              	.LVL27:
+  49:Src/main.c    ****   // sprintf(tx_buffer, "Received Buffer Size: %d\n Buffer : %s", len, rx_buffer, 50);
+ 326              		.loc 1 49 3 view .LVU78
+ 327 0034 2288     		ldrh	r2, [r4]
+ 328 0036 3223     		movs	r3, #50
+ 329 0038 0749     		ldr	r1, .L25+4
+ 330 003a 0DA8     		add	r0, sp, #52
+ 331 003c FFF7FEFF 		bl	sprintf
+ 332              	.LVL28:
+ARM GAS  /tmp/ccVm9iOP.s 			page 9
+
+
+  53:Src/main.c    **** }
+ 333              		.loc 1 53 3 view .LVU79
+  53:Src/main.c    **** }
+ 334              		.loc 1 53 30 is_stmt 0 view .LVU80
+ 335 0040 0DA8     		add	r0, sp, #52
+ 336 0042 FFF7FEFF 		bl	strlen
+ 337              	.LVL29:
+  53:Src/main.c    **** }
+ 338              		.loc 1 53 3 view .LVU81
+ 339 0046 81B2     		uxth	r1, r0
+ 340 0048 0DA8     		add	r0, sp, #52
+ 341 004a FFF7FEFF 		bl	CDC_Transmit_FS
+ 342              	.LVL30:
+  54:Src/main.c    **** 
+ 343              		.loc 1 54 1 view .LVU82
+ 344 004e 1AB0     		add	sp, sp, #104
+ 345              	.LCFI5:
+ 346              		.cfi_def_cfa_offset 8
+ 347              		@ sp needed
+ 348 0050 10BD     		pop	{r4, pc}
+ 349              	.L26:
+ 350 0052 00BF     		.align	2
+ 351              	.L25:
+ 352 0054 00000000 		.word	.LANCHOR0
+ 353 0058 00000000 		.word	.LC0
+ 354              		.cfi_endproc
+ 355              	.LFE134:
+ 357              		.section	.text.Error_Handler,"ax",%progbits
+ 358              		.align	1
+ 359              		.global	Error_Handler
+ 360              		.syntax unified
+ 361              		.thumb
+ 362              		.thumb_func
+ 363              		.fpu fpv4-sp-d16
+ 365              	Error_Handler:
+ 366              	.LFB137:
+  86:Src/main.c    **** //////////////////////////////////////////////////////////////////////
+  87:Src/main.c    **** void Error_Handler(void)
+  88:Src/main.c    **** {
+ 367              		.loc 1 88 1 is_stmt 1 view -0
+ 368              		.cfi_startproc
+ 369              		@ args = 0, pretend = 0, frame = 0
+ 370              		@ frame_needed = 0, uses_anonymous_args = 0
+ 371              		@ link register save eliminated.
+  89:Src/main.c    ****   /* USER CODE BEGIN Error_Handler_Debug */
+  90:Src/main.c    ****   /* User can add his own implementation to report the HAL error return state */
+  91:Src/main.c    **** 
+  92:Src/main.c    ****   /* USER CODE END Error_Handler_Debug */
+  93:Src/main.c    **** }
+ 372              		.loc 1 93 1 view .LVU84
+ 373 0000 7047     		bx	lr
+ 374              		.cfi_endproc
+ 375              	.LFE137:
+ 377              		.global	ppm
+ 378              		.comm	tx_buffer,50,4
+ 379              		.comm	adc_val,6,4
+ 380              		.comm	htim1,64,4
+ARM GAS  /tmp/ccVm9iOP.s 			page 10
+
+
+ 381              		.comm	hdma_adc1,96,4
+ 382              		.comm	hadc1,72,4
+ 383              		.section	.bss.ppm,"aw",%nobits
+ 384              		.align	1
+ 385              		.set	.LANCHOR0,. + 0
+ 388              	ppm:
+ 389 0000 0000     		.space	2
+ 390              		.section	.rodata.CDC_ReceiveCallBack.str1.4,"aMS",%progbits,1
+ 391              		.align	2
+ 392              	.LC0:
+ 393 0000 53657474 		.ascii	"Setting PPM : %dms\015\012\000"
+ 393      696E6720 
+ 393      50504D20 
+ 393      3A202564 
+ 393      6D730D0A 
+ 394              		.text
+ 395              	.Letext0:
+ 396              		.file 2 "/opt/gcc-arm-none-eabi-8-2018-q4-major/arm-none-eabi/include/machine/_default_types.h"
+ 397              		.file 3 "/opt/gcc-arm-none-eabi-8-2018-q4-major/arm-none-eabi/include/sys/_stdint.h"
+ 398              		.file 4 "Drivers/CMSIS/Include/core_cm4.h"
+ 399              		.file 5 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h"
+ 400              		.file 6 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
+ 401              		.file 7 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h"
+ 402              		.file 8 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
+ 403              		.file 9 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
+ 404              		.file 10 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_adc.h"
+ 405              		.file 11 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h"
+ 406              		.file 12 "Inc/main.h"
+ 407              		.file 13 "/opt/gcc-arm-none-eabi-8-2018-q4-major/arm-none-eabi/include/sys/lock.h"
+ 408              		.file 14 "/opt/gcc-arm-none-eabi-8-2018-q4-major/arm-none-eabi/include/sys/_types.h"
+ 409              		.file 15 "/opt/gcc-arm-none-eabi-8-2018-q4-major/lib/gcc/arm-none-eabi/8.2.1/include/stddef.h"
+ 410              		.file 16 "/opt/gcc-arm-none-eabi-8-2018-q4-major/arm-none-eabi/include/sys/reent.h"
+ 411              		.file 17 "/opt/gcc-arm-none-eabi-8-2018-q4-major/arm-none-eabi/include/stdlib.h"
+ 412              		.file 18 "Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h"
+ 413              		.file 19 "Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h"
+ 414              		.file 20 "Inc/usbd_cdc_if.h"
+ 415              		.file 21 "/opt/gcc-arm-none-eabi-8-2018-q4-major/arm-none-eabi/include/ctype.h"
+ 416              		.file 22 "/opt/gcc-arm-none-eabi-8-2018-q4-major/arm-none-eabi/include/string.h"
+ 417              		.file 23 "/opt/gcc-arm-none-eabi-8-2018-q4-major/arm-none-eabi/include/stdio.h"
+ 418              		.file 24 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h"
+ 419              		.file 25 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ARM GAS  /tmp/ccVm9iOP.s 			page 11
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 main.c
+     /tmp/ccVm9iOP.s:18     .text.parseInt:0000000000000000 $t
+     /tmp/ccVm9iOP.s:26     .text.parseInt:0000000000000000 parseInt
+     /tmp/ccVm9iOP.s:151    .text.parseInt:0000000000000058 $d
+     /tmp/ccVm9iOP.s:156    .text.setPPM:0000000000000000 $t
+     /tmp/ccVm9iOP.s:163    .text.setPPM:0000000000000000 setPPM
+     /tmp/ccVm9iOP.s:205    .text.setPPM:0000000000000028 $d
+                            *COM*:0000000000000040 htim1
+     /tmp/ccVm9iOP.s:210    .text.main:0000000000000000 $t
+     /tmp/ccVm9iOP.s:217    .text.main:0000000000000000 main
+     /tmp/ccVm9iOP.s:257    .text.main:000000000000002c $d
+                            *COM*:0000000000000006 adc_val
+                            *COM*:0000000000000048 hadc1
+     /tmp/ccVm9iOP.s:264    .text.CDC_ReceiveCallBack:0000000000000000 $t
+     /tmp/ccVm9iOP.s:271    .text.CDC_ReceiveCallBack:0000000000000000 CDC_ReceiveCallBack
+     /tmp/ccVm9iOP.s:352    .text.CDC_ReceiveCallBack:0000000000000054 $d
+     /tmp/ccVm9iOP.s:358    .text.Error_Handler:0000000000000000 $t
+     /tmp/ccVm9iOP.s:365    .text.Error_Handler:0000000000000000 Error_Handler
+     /tmp/ccVm9iOP.s:388    .bss.ppm:0000000000000000 ppm
+                            *COM*:0000000000000032 tx_buffer
+                            *COM*:0000000000000060 hdma_adc1
+     /tmp/ccVm9iOP.s:384    .bss.ppm:0000000000000000 $d
+     /tmp/ccVm9iOP.s:391    .rodata.CDC_ReceiveCallBack.str1.4:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+_ctype_
+system_peripheral_init
+HAL_ADC_Start_DMA
+HAL_GPIO_TogglePin
+HAL_Delay
+strncpy
+strlen
+sprintf
+CDC_Transmit_FS
